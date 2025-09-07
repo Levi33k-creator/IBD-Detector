@@ -13,3 +13,5 @@ Epochs: 10
 
 Frameworks: PyTorch, Torchvision
 
+This model was trained using images from the HyperKvasir dataset, with an 80/20 split between training and validation folders.
+
