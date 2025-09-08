@@ -4,6 +4,8 @@ import torch.nn as nn
 from torchvision import transforms as T, datasets
 from torch.utils.data import DataLoader
 from model import IBDClassifierCNN
+import matplotlib.pyplot as plt
+from pathlib import Path
 
 def make_loaders(root="data", img_size=224, bs=32, num_workers=0):
     mean = [0.485, 0.456, 0.406]
@@ -66,9 +68,14 @@ def main(epochs=10, lr=3e-4, weight_decay=1e-4):
     optimizer = torch.optim.Adam(model.parameters(), lr=lr, weight_decay=weight_decay)
 
     best_val = 0.0
+    train_losses, train_accs, val_accs = [], [], []
     for epoch in range(1, epochs + 1):
         train_loss, train_acc = train_one_epoch(model, train_loader, optimizer, criterion, device)
         val_acc = evaluate(model, val_loader, device)
+
+        train_losses.append(train_loss)
+        train_accs.append(train_acc)
+        val_accs.append(val_acc)
 
         if val_acc > best_val:
             best_val = val_acc
@@ -77,6 +84,21 @@ def main(epochs=10, lr=3e-4, weight_decay=1e-4):
         print(f"Epoch {epoch:02d} | train_loss {train_loss:.4f} | train_acc {train_acc:.3f} | val_acc {val_acc:.3f}")
     print(f"Best val_acc: {best_val:.3f} (saved to ibd_cnn_best.pt)")
 
+    Path("plots").mkdir(exist_ok=True)
+
+
+    fig1 = plt.figure()
+    plt.plot(train_losses, label="train loss")
+    plt.xlabel("Epoch"); plt.ylabel("Loss"); plt.title("Training Loss"); plt.legend(); plt.tight_layout()
+    fig1.savefig("plots/training_loss.png", dpi=150)
+
+
+    fig2 = plt.figure()
+    plt.plot(train_accs, label="train acc")
+    plt.plot(val_accs, label="val acc")
+    plt.xlabel("Epoch"); plt.ylabel("Accuracy"); plt.title("Accuracy over Epochs"); plt.legend(); plt.tight_layout()
+    fig2.savefig("plots/accuracy_curves.png", dpi=150)
+
 if __name__ == "__main__":
     torch.manual_seed(0)
-    main(epochs=10) 
+    main(epochs=10)
